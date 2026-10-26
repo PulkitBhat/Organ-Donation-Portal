@@ -1,8 +1,7 @@
 -- Organ Donation Management System | MySQL 8.0.16+
--- NOTE: When executing in Aiven Cloud MySQL Workbench, you can change the 3 lines below to: USE defaultdb;
-DROP DATABASE IF EXISTS organ_donation;
-CREATE DATABASE organ_donation;
-USE organ_donation;
+USE defaultdb;
+
+DROP TABLE IF EXISTS Transplants, Requests, Donations, Organs, Recipients, Donors;
 
 CREATE TABLE Donors (
     donor_id      INT AUTO_INCREMENT PRIMARY KEY,

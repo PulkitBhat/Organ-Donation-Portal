@@ -1,4 +1,4 @@
-USE organ_donation;
+USE defaultdb;
 
 INSERT INTO Donors (name, age, gender, blood_group, phone, registered_on) VALUES
     ('Rohan Mehta', 34, 'M', 'O+', '9820011111', '2026-09-01 09:00:00'),
