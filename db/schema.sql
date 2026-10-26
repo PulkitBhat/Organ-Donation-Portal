@@ -1,4 +1,5 @@
 -- Organ Donation Management System | MySQL 8.0.16+
+-- NOTE: When executing in Aiven Cloud MySQL Workbench, you can change the 3 lines below to: USE defaultdb;
 DROP DATABASE IF EXISTS organ_donation;
 CREATE DATABASE organ_donation;
 USE organ_donation;
@@ -76,46 +77,6 @@ CREATE TABLE Transplants (
 
 DELIMITER $$
 
-CREATE TRIGGER trg_donation_before_insert
-BEFORE INSERT ON Donations
-FOR EACH ROW
-BEGIN
-    IF NEW.donation_date > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Donation date cannot be in the future';
-    END IF;
-END$$
-
-CREATE TRIGGER trg_donation_before_update
-BEFORE UPDATE ON Donations
-FOR EACH ROW
-BEGIN
-    IF NEW.donation_date > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Donation date cannot be in the future';
-    END IF;
-END$$
-
-CREATE TRIGGER trg_request_before_insert
-BEFORE INSERT ON Requests
-FOR EACH ROW
-BEGIN
-    IF NEW.request_date > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Request date cannot be in the future';
-    END IF;
-END$$
-
-CREATE TRIGGER trg_request_before_update
-BEFORE UPDATE ON Requests
-FOR EACH ROW
-BEGIN
-    IF NEW.request_date > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Request date cannot be in the future';
-    END IF;
-END$$
-
 CREATE TRIGGER trg_transplant_before_insert
 BEFORE INSERT ON Transplants
 FOR EACH ROW
@@ -126,34 +87,19 @@ BEGIN
     DECLARE r_blood  VARCHAR(3);
     DECLARE d_status VARCHAR(10);
     DECLARE r_status VARCHAR(10);
-    DECLARE d_date   DATE;
-    DECLARE r_date   DATE;
 
-    IF NEW.transplant_date > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Transplant date cannot be in the future';
-    END IF;
-
-    SELECT dn.organ_id, dn.status, d.blood_group, dn.donation_date
-      INTO d_organ, d_status, d_blood, d_date
+    SELECT dn.organ_id, dn.status, d.blood_group
+      INTO d_organ, d_status, d_blood
       FROM Donations dn
       JOIN Donors d ON d.donor_id = dn.donor_id
      WHERE dn.donation_id = NEW.donation_id;
 
-    SELECT rq.organ_id, rq.status, r.blood_group, rq.request_date
-      INTO r_organ, r_status, r_blood, r_date
+    SELECT rq.organ_id, rq.status, r.blood_group
+      INTO r_organ, r_status, r_blood
       FROM Requests rq
       JOIN Recipients r ON r.recipient_id = rq.recipient_id
      WHERE rq.request_id = NEW.request_id;
 
-    IF NEW.transplant_date < d_date THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Transplant date cannot be earlier than donation date';
-    END IF;
-    IF NEW.transplant_date < r_date THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Transplant date cannot be earlier than request date';
-    END IF;
     IF d_organ <> r_organ THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Donated organ and requested organ are different';
@@ -169,31 +115,6 @@ BEGIN
     IF r_status <> 'WAITING' THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'This request is not waiting for an organ';
-    END IF;
-END$$
-
-CREATE TRIGGER trg_transplant_before_update
-BEFORE UPDATE ON Transplants
-FOR EACH ROW
-BEGIN
-    DECLARE d_date   DATE;
-    DECLARE r_date   DATE;
-
-    IF NEW.transplant_date > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Transplant date cannot be in the future';
-    END IF;
-
-    SELECT dn.donation_date INTO d_date FROM Donations dn WHERE dn.donation_id = NEW.donation_id;
-    SELECT rq.request_date  INTO r_date FROM Requests rq WHERE rq.request_id = NEW.request_id;
-
-    IF NEW.transplant_date < d_date THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Transplant date cannot be earlier than donation date';
-    END IF;
-    IF NEW.transplant_date < r_date THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Transplant date cannot be earlier than request date';
     END IF;
 END$$
 
