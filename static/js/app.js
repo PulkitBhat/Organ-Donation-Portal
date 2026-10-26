@@ -649,7 +649,7 @@ async function openDonationForm(donationId = null) {
       </div>
       <div class="form-group">
         <label for="donation-date">Donation Date <span class="required">*</span></label>
-        <input type="date" id="donation-date" name="donation_date" required value="${todayStr}">
+        <input type="date" id="donation-date" name="donation_date" required value="${todayStr}" max="${todayStr}">
       </div>
     `;
   } else {
@@ -671,7 +671,7 @@ async function openDonationForm(donationId = null) {
       </div>
       <div class="form-group">
         <label for="donation-date">Donation Date <span class="required">*</span></label>
-        <input type="date" id="donation-date" name="donation_date" required value="${donation.donation_date}">
+        <input type="date" id="donation-date" name="donation_date" required value="${donation.donation_date}" max="${todayStr}">
       </div>
       <div class="form-group">
         <label for="donation-status">Status <span class="required">*</span></label>
@@ -688,6 +688,9 @@ async function openDonationForm(donationId = null) {
     fieldsHtml,
     submitLabel: isEdit ? 'Save Changes' : 'Record Donation',
     onSubmit: async (form) => {
+      if (form.donation_date.value > todayStr) {
+        throw new Error('Donation date cannot be in the future.');
+      }
       if (!isEdit) {
         const payload = {
           donor_id: parseInt(form.donor_id.value, 10),
@@ -859,7 +862,7 @@ async function openRequestForm(requestId = null) {
       </div>
       <div class="form-group">
         <label for="request-date">Request Date <span class="required">*</span></label>
-        <input type="date" id="request-date" name="request_date" required value="${todayStr}">
+        <input type="date" id="request-date" name="request_date" required value="${todayStr}" max="${todayStr}">
       </div>
     `;
   } else {
@@ -883,7 +886,7 @@ async function openRequestForm(requestId = null) {
       </div>
       <div class="form-group">
         <label for="request-date">Request Date <span class="required">*</span></label>
-        <input type="date" id="request-date" name="request_date" required value="${reqItem.request_date}">
+        <input type="date" id="request-date" name="request_date" required value="${reqItem.request_date}" max="${todayStr}">
       </div>
       <div class="form-group">
         <label for="request-status">Status <span class="required">*</span></label>
@@ -900,6 +903,9 @@ async function openRequestForm(requestId = null) {
     fieldsHtml,
     submitLabel: isEdit ? 'Save Changes' : 'Record Request',
     onSubmit: async (form) => {
+      if (form.request_date.value > todayStr) {
+        throw new Error('Request date cannot be in the future.');
+      }
       if (!isEdit) {
         const payload = {
           recipient_id: parseInt(form.recipient_id.value, 10),
@@ -1083,8 +1089,11 @@ function openRecordTransplantModal(match) {
   document.getElementById('transplant-patient-info').textContent = `${match.patient} (${match.blood_group})`;
   document.getElementById('transplant-organ-info').textContent = `${match.organ_name} • ${match.urgency} urgency`;
 
+  const todayStr = new Date().toISOString().split('T')[0];
   document.getElementById('transplant-surgeon').value = '';
-  document.getElementById('transplant-date').value = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('transplant-date');
+  dateInput.value = todayStr;
+  dateInput.max = todayStr;
   document.getElementById('transplant-outcome').value = 'SUCCESSFUL';
 
   ui.openDialog(dialog);
@@ -1102,6 +1111,13 @@ function setupTransplantForm() {
     const surgeon_name = form.surgeon_name.value.trim();
     if (surgeon_name.length < 2) {
       errorBox.textContent = 'Surgeon name must be at least 2 characters.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (form.transplant_date.value > todayStr) {
+      errorBox.textContent = 'Transplant date cannot be in the future.';
       errorBox.style.display = 'block';
       return;
     }
@@ -1133,6 +1149,7 @@ function setupTransplantForm() {
 }
 
 function openEditTransplantModal(transplant) {
+  const todayStr = new Date().toISOString().split('T')[0];
   const fieldsHtml = `
     <div class="form-group">
       <label>Organ &amp; Participants</label>
@@ -1144,7 +1161,7 @@ function openEditTransplantModal(transplant) {
     </div>
     <div class="form-group">
       <label for="edit-transplant-date">Transplant Date <span class="required">*</span></label>
-      <input type="date" id="edit-transplant-date" name="transplant_date" required value="${transplant.transplant_date}">
+      <input type="date" id="edit-transplant-date" name="transplant_date" required value="${transplant.transplant_date}" max="${todayStr}">
     </div>
     <div class="form-group">
       <label for="edit-outcome">Outcome <span class="required">*</span></label>
@@ -1161,6 +1178,9 @@ function openEditTransplantModal(transplant) {
     fieldsHtml,
     submitLabel: 'Save Changes',
     onSubmit: async (form) => {
+      if (form.transplant_date.value > todayStr) {
+        throw new Error('Transplant date cannot be in the future.');
+      }
       const payload = {
         surgeon_name: form.surgeon_name.value.trim(),
         transplant_date: form.transplant_date.value,

@@ -40,9 +40,12 @@ def create_request():
     try:
         recipient_id_int = int(recipient_id)
         organ_id_int = int(organ_id)
-        datetime.strptime(request_date, "%Y-%m-%d")
+        request_date_obj = datetime.strptime(request_date, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
+
+    if request_date_obj > datetime.now().date():
+        raise AppError("Request date cannot be in the future.", 400)
 
     if urgency not in VALID_URGENCIES:
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
@@ -78,9 +81,12 @@ def update_request(request_id):
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
 
     try:
-        datetime.strptime(request_date, "%Y-%m-%d")
+        request_date_obj = datetime.strptime(request_date, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
+
+    if request_date_obj > datetime.now().date():
+        raise AppError("Request date cannot be in the future.", 400)
 
     if urgency not in VALID_URGENCIES:
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)

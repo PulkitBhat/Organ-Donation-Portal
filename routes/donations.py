@@ -39,9 +39,12 @@ def create_donation():
     try:
         donor_id_int = int(donor_id)
         organ_id_int = int(organ_id)
-        datetime.strptime(donation_date, "%Y-%m-%d")
+        donation_date_obj = datetime.strptime(donation_date, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
+
+    if donation_date_obj > datetime.now().date():
+        raise AppError("Donation date cannot be in the future.", 400)
 
     if donation_type not in VALID_DONATION_TYPES:
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
@@ -77,9 +80,12 @@ def update_donation(donation_id):
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
 
     try:
-        datetime.strptime(donation_date, "%Y-%m-%d")
+        donation_date_obj = datetime.strptime(donation_date, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
+
+    if donation_date_obj > datetime.now().date():
+        raise AppError("Donation date cannot be in the future.", 400)
 
     if donation_type not in VALID_DONATION_TYPES:
         raise AppError("Please check the form: a field is missing or has an invalid value.", 400)
